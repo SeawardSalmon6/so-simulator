@@ -18,12 +18,12 @@ typedef struct {
 // ====== List Node Prototypes
 list_node_t *list_node_create(void *);
 list_node_t *list_remove_head(list_t *);
-list_node_t *list_remove_node(list_t *, list_node_t *);
+void list_remove_node(list_t *, list_node_t *);
 list_node_t *list_remove_tail(list_t *);
 
 // ====== List Prototypes
 list_t *list_init();
 void list_add(list_t *, void *);
-void is_list_empty(list_t *);
+int is_list_empty(list_t *);
 
 #endif // OS_SIMULATOR_LIST_H

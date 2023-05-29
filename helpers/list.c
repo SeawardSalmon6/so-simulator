@@ -14,6 +14,7 @@ list_node_t *list_node_create(void *content) {
   node->content = content;
   node->next = NULL;
   node->prev = NULL;
+
   return node;
 }
 
@@ -38,7 +39,7 @@ list_node_t *list_remove_head(list_t *list) {
   return node;
 }
 
-list_node_t *list_remove_node(list_t *list, list_node_t *node) {
+void list_remove_node(list_t *list, list_node_t *node) {
   if (node) {
     if (node->prev) {
       node->prev->next = node->next;
@@ -106,7 +107,7 @@ void list_add(list_t *list, void *content) {
   list->size++;
 }
 
-void list_is_empty(list_t *list) {
+int list_is_empty(list_t *list) {
   return !list->head;
 }
 
