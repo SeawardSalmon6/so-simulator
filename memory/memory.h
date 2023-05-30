@@ -39,12 +39,14 @@ typedef struct {
   instruction_t *code;
 } memory_request_t;
 
-void segment_table_init(segment_table_t *);
 void memory_request_init(memory_request_t *, process_t *, instruction_t *);
 void memory_request_load(memory_request_t *, segment_table_t *);
+int memory_page_swap(segment_table_t *, segment_t *);
+void segment_table_init(segment_table_t *);
 segment_t *segment_create(memory_request_t *);
 void segment_write_code(segment_t *, instruction_t *, const int);
 void segment_add(segment_table_t *, segment_t *);
-int memory_page_swap(segment_table_t *, segment_t *);
+segment_t *segment_find(segment_table_t *, int);
+void segment_free(segment_table_t *, int);
 
 #endif // OS_SIMULATOR_MEMORY_H

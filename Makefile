@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-lpthread -lm
+CFLAGS=-pthread -lm -lrt
 SOURCES = $(wildcard *.c) $(wildcard */*.c)
 
 all:

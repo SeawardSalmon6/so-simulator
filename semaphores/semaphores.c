@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../helpers/constants.h"
+#include "../process/process.h"
 #include "semaphores.h"
 
 void semaphore_init(semaphore_t *sem, char *name, const int status) {
@@ -58,4 +59,28 @@ semaphore_t *semaphore_find(semaphore_table_t *sem_table, char *sem_name) {
   }
 
   return NULL;
+}
+
+void semaphore_P(semaphore_t *sem, process_t *proc, void (*sleep_proc)(void)) {
+  sem_wait(&sem->mutex);
+  sem->status--;
+
+  if (sem->status < 0) {
+    list_add(sem->waiters, proc);
+    sleep_proc();
+  }
+
+  sem_post(&sem->mutex);
+}
+
+void semaphore_V(semaphore_t *sem, void (*wakeup_proc)(process_t *)) {
+  sem_wait(&sem->mutex);
+  sem->status++;
+
+  if (sem->status <= 0) {
+    process_t *proc = (process_t *)(list_remove_head(sem->waiters)->content);
+    wakeup_proc(proc);
+  }
+
+  sem_post(&sem->mutex);
 }

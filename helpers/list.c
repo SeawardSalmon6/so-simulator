@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "list.h"
 
-// ======= List Node
 list_node_t *list_node_create(void *content) {
   list_node_t *node = (list_node_t *)malloc(sizeof(list_node_t));
 
@@ -78,8 +78,7 @@ list_node_t *list_remove_tail(list_t *list) {
   return node;
 }
 
-// ======= List
-list_t *list_init() {
+list_t *list_init(void) {
   list_t *list = (list_t *)malloc(sizeof(list_t));
 
   if (!list) {
@@ -107,7 +106,7 @@ void list_add(list_t *list, void *content) {
   list->size++;
 }
 
-int list_is_empty(list_t *list) {
+int is_list_empty(list_t *list) {
   return !list->head;
 }
 

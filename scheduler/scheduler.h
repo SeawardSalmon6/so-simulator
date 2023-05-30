@@ -16,7 +16,7 @@ typedef enum {
 typedef enum {
   LOW_QUEUE,
   HIGH_QUEUE
-} scheduler_queue_flags_t;
+} scheduler_queue_flag_t;
 
 typedef struct {
   list_t *queue;
@@ -32,5 +32,7 @@ typedef struct {
 
 void scheduler_init(scheduler_t *);
 scheduler_queue_t *scheduler_queue_init(const int);
+void schedule_process(scheduler_t *, int);
+void schedule_unblock_process(scheduler_t *, process_t *, scheduler_queue_flag_t);
 
 #endif // OS_SIMULATOR_SCHEDULER_H

@@ -42,7 +42,7 @@ int memory_page_swap(segment_table_t *seg_table, segment_t *seg) {
   curr_node = seg_table->segment_list->head;
 
   while (curr_node) {
-    seg_content = !curr_node ? NULL : (segment_t *)curr_node->content;
+    seg_content = (segment_t *)curr_node->content;
 
     for (i = 0; i < seg_content->page_count; i++) {
       page = seg_content->page_table + i;
@@ -101,4 +101,21 @@ void segment_write_code(segment_t *seg, instruction_t *code, const int code_leng
 void segment_add(segment_table_t *seg_table, segment_t *segment) {
   list_add(seg_table->segment_list, (void *)segment);
   seg_table->segment_list_size++;
+}
+
+segment_t *segment_find(segment_table_t *seg_table, int seg_id) {
+  list_node_t *current = seg_table->segment_list->head;
+  segment_t *content;
+
+  while (current) {
+    content = (segment_t *)current->content;
+
+    if (seg_id == content->id) {
+      return (segment_t *)current->content;
+    }
+
+    current = current->next;
+  }
+
+  return NULL;
 }

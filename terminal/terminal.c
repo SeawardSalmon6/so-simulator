@@ -1,20 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 
+#include "../cpu/cpu.h"
 #include "../helpers/constants.h"
 #include "../kernel/kernel.h"
 #include "terminal.h"
 
-void clear_buffer() {
+int is_process_log_active = 0;
+int is_memory_log_active = 0;
+
+void clear_buffer(void) {
   int c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
 }
 
-void show_menu() {
+void show_menu(void) {
   int op;
-  char filename[MAX_STRING_SIZE];
+  char c, filename[MAX_STRING_SIZE];
+
+  struct timespec start;
+  struct timespec end;
 
   do {
     do {
@@ -30,9 +39,11 @@ void show_menu() {
       clear_buffer(); // Clears stdin for string reading
     } while (op < 0 || op > TERM_OPTIONS_LENGTH - 1);
 
+    system(CLEAR);
+
     switch (op) {
       case TERM_CREATE_PROCESS: {
-        printf("\n--> Insert filename (or path): ");
+        printf("\n--> Insert filename: ");
         fgets(filename, MAX_STRING_SIZE, stdin);
         filename[strlen(filename) - 1] = '\0';
 
@@ -47,10 +58,48 @@ void show_menu() {
       }
 
       case TERM_SHOW_TASKS: {
+        is_process_log_active = 1;
+
+        clock_gettime(CLOCK_REALTIME, &start);
+
+        printf("\n\n======== CPU Running Tasks");
+
+        do {
+          clock_gettime(CLOCK_REALTIME, &end);
+
+          if ((end.tv_sec - start.tv_sec) * ONE_SECOND_IN_NS + (end.tv_nsec - start.tv_nsec) > 2 * ONE_SECOND_IN_NS) {
+            printf("\n\n--> Want to quit (y/n)?");
+            c = getchar();
+
+            printf("\n");
+          } else {
+            start = end;
+          }
+        } while (c != 'y');
+
         break;
       }
 
       case TERM_SHOW_MEMORY_STATUS: {
+        is_memory_log_active = 1;
+
+        clock_gettime(CLOCK_REALTIME, &start);
+
+        printf("\n\n======== Memory Usage Status");
+
+        do {
+          clock_gettime(CLOCK_REALTIME, &end);
+
+          if ((end.tv_sec - start.tv_sec) * ONE_SECOND_IN_NS + (end.tv_nsec - start.tv_nsec) > 2 * ONE_SECOND_IN_NS) {
+            printf("\n\n--> Want to quit (y/n)?");
+            c = getchar();
+
+            printf("\n");
+          } else {
+            start = end;
+          }
+        } while (c != 'y');
+
         break;
       }
 
@@ -64,5 +113,8 @@ void show_menu() {
         break;
       }
     }
+
+    is_process_log_active = 0;
+    is_memory_log_active = 0;
   } while (op != TERM_EXIT);
 }

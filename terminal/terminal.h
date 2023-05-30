@@ -1,6 +1,14 @@
 #ifndef OS_SIMULATOR_TERMINAL_H
 #define OS_SIMULATOR_TERMINAL_H
 
+#ifdef WIN32
+#define CLEAR "cls"
+#elif WIN64
+#define CLEAR "cls"
+#else
+#define CLEAR "clear"
+#endif
+
 #define TERM_CREATE_PROCESS_LABEL "Create New Process"
 #define TERM_SHOW_TASKS_LABEL "Show Running Processes"
 #define TERM_SHOW_MEMORY_STATUS_LABEL "Show Memory Status"
@@ -14,6 +22,9 @@ typedef enum {
   TERM_OPTIONS_LENGTH // If there is no = above, indicates the size of menu
 } terminal_options_t;
 
-void show_menu();
+extern int is_process_log_active;
+extern int is_memory_log_active;
+
+void show_menu(void);
 
 #endif // OS_SIMULATOR_TERMINAL_H

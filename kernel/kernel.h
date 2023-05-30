@@ -3,6 +3,8 @@
 
 #include "../helpers/list.h"
 #include "../memory/memory.h"
+#include "../process/instruction.h"
+#include "../process/process.h"
 #include "../scheduler/scheduler.h"
 #include "../semaphores/semaphores.h"
 
@@ -34,8 +36,11 @@ typedef struct {
 
 extern kernel_t *kernel;
 
-void kernel_init();
+void kernel_init(void);
 void sys_call(kernel_function_t, void *);
 void interrupt_control(kernel_function_t, void *);
+void run_instruction(process_t *, instruction_t *);
+void sleep_proc(void);
+void wakeup_proc(process_t *);
 
 #endif // OS_SIMULATOR_KERNEL_H

@@ -4,8 +4,6 @@
 #include <stdio.h>
 
 #include "../helpers/list.h"
-#include "../process/instruction.h"
-#include "../semaphores/semaphores.h"
 
 typedef enum {
   NEW,
@@ -31,6 +29,7 @@ typedef struct {
 void process_create(char *);
 process_t *parse_synthetic_program(FILE *, char *);
 void read_semaphores(process_t *, char *);
-instruction_t *read_code(FILE *, char *, int *);
+list_node_t *process_list_node_search(list_t *list, int proc_id);
+void process_finish(process_t *);
 
 #endif // OS_SIMULATOR_PROCESS_H

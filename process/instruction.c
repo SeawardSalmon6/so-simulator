@@ -24,9 +24,10 @@ void parse_semaphore_instruction(instruction_t *instruction, char *line, semapho
   instruction->semaphore = sem_name;
 }
 
-void parse_instruction(instruction_t *instruction, char *line, semaphore_table_t *sem_table) {
+void parse_instruction(instruction_t *instruction, char *line, int *remaining_time, semaphore_table_t *sem_table) {
   if (line[0] == 'P' || line[0] == 'V') {
     parse_semaphore_instruction(instruction, line, sem_table);
+    (*remaining_time) += 200;
   } else {
     char *dupline = duplicate_str(line);
     char *left_op = strtok(dupline, " ");
@@ -42,6 +43,7 @@ void parse_instruction(instruction_t *instruction, char *line, semaphore_table_t
       instruction->op = PRINT;
     }
 
+    (*remaining_time) += right_op;
     instruction->value = right_op;
     instruction->semaphore = NULL;
   }
