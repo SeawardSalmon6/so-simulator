@@ -19,7 +19,7 @@ void list_remove_node(list_t *, list_node_t *);
 list_node_t *list_remove_tail(list_t *);
 
 list_t *list_init(void);
-void list_add(list_t *, void *);
+void list_add(list_t *, void *, int);
 int is_list_empty(list_t *);
 
 #endif // OS_SIMULATOR_LIST_H

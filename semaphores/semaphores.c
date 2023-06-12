@@ -15,12 +15,10 @@ void semaphore_init(semaphore_t *sem, char *name, const int status) {
 
 void semaphore_register(semaphore_table_t *sem_table, char *sem_name) {
   semaphore_t *sem, *table;
-  int i;
 
-  for (i = 0; i < sem_table->length; i++) {
-    if (strcmp(sem_table->table[i].name, sem_name) == 0) {
-      return;
-    }
+  sem = semaphore_find(sem_table, sem_name);
+  if (sem) {
+    return;
   }
 
   table = (semaphore_t *)realloc(sem_table->table, sizeof(semaphore_t) * (sem_table->length + 1));
@@ -50,14 +48,12 @@ void semaphore_table_init(semaphore_table_t *sem_table) {
 }
 
 semaphore_t *semaphore_find(semaphore_table_t *sem_table, char *sem_name) {
-  semaphore_t *tmp = &sem_table->table[0];
-
-  while (tmp < &sem_table->table[sem_table->length]) {
-    if (strcmp(sem_name, tmp->name) == 0) {
-      return tmp;
+  int i;
+  for (i = 0; i < sem_table->length; i++) {
+    if (strcmp(sem_name, sem_table->table[i].name) == 0) {
+      return &sem_table->table[i];
     }
   }
-
   return NULL;
 }
 
@@ -66,7 +62,7 @@ void semaphore_P(semaphore_t *sem, process_t *proc, void (*sleep_proc)(void)) {
   sem->status--;
 
   if (sem->status < 0) {
-    list_add(sem->waiters, proc);
+    list_add(sem->waiters, (void *)proc, 0);
     sleep_proc();
   }
 

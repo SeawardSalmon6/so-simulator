@@ -30,7 +30,7 @@ void kernel_init(void) {
 void sys_call(kernel_function_t func, void *arg) {
   switch (func) {
     case PROCESS_INTERRUPT: {
-      schedule_process(&kernel->scheduler, (__intptr_t)arg);
+      schedule_process(&kernel->scheduler, (scheduler_flag_t)((__intptr_t)arg));
       break;
     }
 
@@ -73,13 +73,19 @@ void interrupt_control(kernel_function_t func, void *arg) {
       memory_request_t *request = (memory_request_t *)arg;
       process_t *process = request->process;
 
-      list_add(kernel->proc_table, (void *)process);
+      list_add(kernel->proc_table, (void *)process, 0);
 
       process->state = READY;
-      if (process->priority == 1) {
-        list_add(kernel->scheduler.high_queue->queue, (void *)process);
+      if (process->priority) {
+        list_add(kernel->scheduler.high_queue, (void *)process, 1);
       } else {
-        list_add(kernel->scheduler.low_queue->queue, (void *)process);
+        list_add(kernel->scheduler.low_queue, (void *)process, 1);
+      }
+
+      if (kernel->scheduler.scheduled_process != NULL && kernel->scheduler.scheduled_process != process) {
+        if (kernel->scheduler.scheduled_process->remaining > process->remaining) {
+          sys_call(PROCESS_INTERRUPT, (void *)(int)QUANTUM_COMPLETED);
+        }
       }
 
       break;
@@ -95,35 +101,23 @@ void interrupt_control(kernel_function_t func, void *arg) {
 void run_instruction(process_t *proc, instruction_t *instr) {
   switch (instr->op) {
     case EXEC: {
-      if (is_process_log_active) {
-        printf("\nProcess (%s - %d): I'm executing!", proc->name, proc->id);
-      }
-
       proc->remaining -= instr->value;
       break;
     }
 
     case READ: {
-      if (is_process_log_active) {
-        printf("\nProcess (%s - %d): I'm reading!", proc->name, proc->id);
-      }
-
       proc->remaining -= instr->value;
       break;
     }
 
     case WRITE: {
-      if (is_process_log_active) {
-        printf("\nProcess (%s - %d): I'm writing!", proc->name, proc->id);
-      }
-
       proc->remaining -= instr->value;
       break;
     }
 
     case PRINT: {
       if (is_process_log_active) {
-        printf("\nProcess (%s - %d): I'm printing!", proc->name, proc->id);
+        printf("\nProcess (%s - %d): I'm printing! [%d]", proc->name, proc->id, instr->value);
       }
 
       proc->remaining -= instr->value;
@@ -131,10 +125,6 @@ void run_instruction(process_t *proc, instruction_t *instr) {
     }
 
     case SEM_P: {
-      if (is_process_log_active) {
-        printf("\nProcess (%s - %d): Requesting semaphore %s!", proc->name, proc->id, instr->semaphore);
-      }
-
       sys_call(SEMAPHORE_P, (void *)semaphore_find(&kernel->sem_table, instr->semaphore));
 
       if (proc->state != BLOCKED) {
@@ -145,11 +135,8 @@ void run_instruction(process_t *proc, instruction_t *instr) {
     }
 
     case SEM_V: {
-      if (is_process_log_active) {
-        printf("\nProcess (%s - %d): Realeasing semaphore %s!", proc->name, proc->id, instr->semaphore);
-      }
-
       sys_call(SEMAPHORE_V, (void *)semaphore_find(&kernel->sem_table, instr->semaphore));
+
       proc->remaining = 0 >= proc->remaining - 200 ? 0 : proc->remaining - 200;
 
       break;
@@ -158,9 +145,9 @@ void run_instruction(process_t *proc, instruction_t *instr) {
 }
 
 void sleep_proc(void) {
-  sys_call(PROCESS_INTERRUPT, (void *)SEMAPHORE_BLOCKED);
+  sys_call(PROCESS_INTERRUPT, (void *)(int)SEMAPHORE_BLOCKED);
 }
 
 void wakeup_proc(process_t *proc) {
-  schedule_unblock_process(&kernel->scheduler, proc, HIGH_QUEUE);
+  schedule_unblock_process(&kernel->scheduler, proc, proc->priority ? HIGH_QUEUE : LOW_QUEUE);
 }

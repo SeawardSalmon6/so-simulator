@@ -10,11 +10,12 @@ char *duplicate_str(char *str) {
   }
 
   const size_t length = strlen(str);
-  char *tmp = (char *)malloc(length * sizeof(char));
+  char *tmp = (char *)malloc((length + 1) * sizeof(char));
   if (!tmp) {
     return NULL;
   }
 
   memcpy(tmp, str, length);
+  tmp[length] = 0;
   return tmp;
 }

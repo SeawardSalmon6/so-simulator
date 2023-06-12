@@ -99,7 +99,7 @@ void segment_write_code(segment_t *seg, instruction_t *code, const int code_leng
 }
 
 void segment_add(segment_table_t *seg_table, segment_t *segment) {
-  list_add(seg_table->segment_list, (void *)segment);
+  list_add(seg_table->segment_list, (void *)segment, 0);
   seg_table->segment_list_size++;
 }
 
@@ -110,8 +110,8 @@ segment_t *segment_find(segment_table_t *seg_table, int seg_id) {
   while (current) {
     content = (segment_t *)current->content;
 
-    if (seg_id == content->id) {
-      return (segment_t *)current->content;
+    if (content->id == seg_id) {
+      return content;
     }
 
     current = current->next;

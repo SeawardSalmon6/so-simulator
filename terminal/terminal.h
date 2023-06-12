@@ -9,6 +9,9 @@
 #define CLEAR "clear"
 #endif
 
+#include "../helpers/list.h"
+#include "../process/process.h"
+
 #define TERM_CREATE_PROCESS_LABEL "Create New Process"
 #define TERM_SHOW_TASKS_LABEL "Show Running Processes"
 #define TERM_SHOW_MEMORY_STATUS_LABEL "Show Memory Status"
@@ -26,5 +29,8 @@ extern int is_process_log_active;
 extern int is_memory_log_active;
 
 void show_menu(void);
+void print_tasks(void);
+void print_list_with_processes_info(const char *, list_t *);
+void print_process_info(process_t *);
 
 #endif // OS_SIMULATOR_TERMINAL_H

@@ -31,7 +31,7 @@ void parse_instruction(instruction_t *instruction, char *line, int *remaining_ti
   } else {
     char *dupline = duplicate_str(line);
     char *left_op = strtok(dupline, " ");
-    int right_op = atoi(strtok(dupline, " "));
+    int right_op = atoi(strtok(NULL, " "));
 
     if (strcmp(left_op, "exec") == 0) {
       instruction->op = EXEC;

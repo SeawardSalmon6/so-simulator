@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "list.h"
+#include "../process/process.h"
 
 list_node_t *list_node_create(void *content) {
   list_node_t *node = (list_node_t *)malloc(sizeof(list_node_t));
@@ -92,17 +93,60 @@ list_t *list_init(void) {
   return list;
 }
 
-void list_add(list_t *list, void *content) {
-  list_node_t *node = list_node_create(content);
+void list_add(list_t *list, void *content, int sort_process) {
+  process_t *aux_proc, *proc;
+  list_node_t *aux, *node = list_node_create(content);
 
   if (!list->head) {
     list->head = node;
+    list->tail = node;
   } else {
-    list->tail->next = node;
-    node->prev = list->tail;
+    if (sort_process) {
+      proc = (process_t *)content;
+      aux = list->head;
+
+      while (aux) {
+        aux_proc = (process_t *)aux->content;
+
+        if (aux_proc->remaining >= proc->remaining) {
+          if (aux == list->head) {
+            if (aux_proc->remaining > proc->remaining) {
+              node->next = list->head;
+              list->head->prev = node;
+              list->head = node;
+            } else {
+              aux = aux->next;
+              continue;
+            }
+          } else if (aux == list->tail) {
+            list->tail->next = node;
+            node->prev = list->tail;
+            list->tail = node;
+          } else {
+            node->prev = aux->prev;
+            node->next = aux;
+            aux->prev->next = node;
+            aux->prev = node;
+          }
+
+          break; // Process is already placed
+        }
+
+        aux = aux->next;
+      }
+
+      if (list->head == list->tail) {
+        list->tail->next = node;
+        node->prev = list->tail;
+        list->tail = node;
+      }
+    } else {
+      list->tail->next = node;
+      node->prev = list->tail;
+      list->tail = node;
+    }
   }
 
-  list->tail = node;
   list->size++;
 }
 
@@ -122,5 +166,6 @@ void list_free(list_t *list) {
     }
 
     free(list);
+    list = NULL;
   }
 }
