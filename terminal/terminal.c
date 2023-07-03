@@ -2,15 +2,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 
 #include "../cpu/cpu.h"
 #include "../helpers/constants.h"
 #include "../kernel/kernel.h"
+#include "../memory/memory.h"
 #include "terminal.h"
-
-int is_process_log_active = 0;
-int is_memory_log_active = 0;
 
 void clear_buffer(void) {
   int c;
@@ -20,10 +17,7 @@ void clear_buffer(void) {
 
 void show_menu(void) {
   int op;
-  char c, filename[MAX_STRING_SIZE];
-
-  struct timespec start;
-  struct timespec end;
+  char filename[MAX_STRING_SIZE];
 
   do {
     system(CLEAR);
@@ -66,34 +60,7 @@ void show_menu(void) {
       }
 
       case TERM_SHOW_MEMORY_STATUS: {
-        c = 'y';
-        is_memory_log_active = 1;
-
-        clock_gettime(CLOCK_REALTIME, &start);
-
-        printf("\n\n======== Memory Usage Status");
-
-        do {
-          clock_gettime(CLOCK_REALTIME, &end);
-
-          if (kernel->seg_table.remaining == 1 * GIGABYTE) {
-            printf("\n--> There is no memory usage at the moment!");
-            break;
-          }
-
-          if ((end.tv_sec - start.tv_sec) * ONE_SECOND_IN_NS + (end.tv_nsec - start.tv_nsec) > 8 * ONE_SECOND_IN_NS) {
-            is_memory_log_active = 0;
-
-            printf("\n\n--> Want to continue (y/n)? ");
-            scanf(" %c", &c);
-
-            if (c == 'y') {
-              start = end;
-              is_memory_log_active = 1;
-            }
-          }
-        } while (c != 'n');
-
+        print_memory_usage();
         break;
       }
 
@@ -107,13 +74,10 @@ void show_menu(void) {
         break;
       }
     }
-
-    is_process_log_active = 0;
-    is_memory_log_active = 0;
   } while (op != TERM_EXIT);
 }
 
-void print_tasks() {
+void print_tasks(void) {
   char c;
 
   do {
@@ -145,16 +109,6 @@ void print_tasks() {
   } while (c != 'y');
 }
 
-void print_process_info(process_t *proc) {
-  printf("| %02d | %s | %d | %s | %s\n",
-    proc->id,
-    proc->name,
-    proc->remaining,
-    proc->priority ? "yep" : "nope",
-    proc->state == NEW ? "new" : proc->state == BLOCKED ? "blocked" : proc->state == READY ? "ready" : "running"
-  );
-}
-
 void print_list_with_processes_info(const char *title, list_t *list) {
   process_t *proc;
   list_node_t *aux = list->head;
@@ -167,7 +121,15 @@ void print_list_with_processes_info(const char *title, list_t *list) {
   if (list->head) {
     while (aux) {
       proc = (process_t *)aux->content;
-      print_process_info(proc);
+
+      printf("| %02d | %s | %d | %s | %s\n",
+        proc->id,
+        proc->name,
+        proc->remaining,
+        proc->priority ? "yep" : "nope",
+        proc->state == NEW ? "new" : proc->state == BLOCKED ? "blocked" : proc->state == READY ? "ready" : "running"
+      );
+
       aux = aux->next;
     }
   } else {
@@ -175,4 +137,62 @@ void print_list_with_processes_info(const char *title, list_t *list) {
   }
 
   printf("---------------------------------------------------\n");
+}
+
+void print_memory_usage(void) {
+  char c;
+
+  do {
+    if (kernel->seg_table.remaining == MAX_MEM_SIZE) {
+      printf("\n\n--> There is no memory usage at the moment!");
+      break;
+    }
+
+    system(CLEAR);
+
+    printf("\n\n======== Memory Usage");
+
+    printf("\n\n-----> Total Memory Usage:\n");
+    printf("  > Total Memory: %.2f KB\n", ((double)MAX_MEM_SIZE) / KILOBYTE);
+
+    printf("  > Memory In Use: %.2f KB (%.2f%%)\n",
+      ((double)(MAX_MEM_SIZE - kernel->seg_table.remaining)) / KILOBYTE,
+      (((double)(MAX_MEM_SIZE - kernel->seg_table.remaining)) / KILOBYTE) / MAX_MEM_SIZE * 100
+    );
+
+    printf("  > Available Memory: %.2f KB\n", ((double)kernel->seg_table.remaining / KILOBYTE));
+
+    print_list_with_segments_info(kernel->seg_table.segment_list);
+
+    printf("\n\n--> Want to go back to main menu (y/n)? ");
+    scanf(" %c", &c);
+  } while (c != 'y');
+}
+
+void print_list_with_segments_info(list_t *list) {
+  segment_t *seg;
+  list_node_t *aux = list->head;
+
+  printf("\n\n-----> Segments Table\n");
+  printf("----------------------------\n");
+  printf("| id | seg_size | page_count\n");
+  printf("----------------------------\n");
+
+  while (aux) {
+    seg = (segment_t *)aux->content;
+
+    printf("| %02d | %dKB | %d\n", seg->id, seg->size / KILOBYTE, seg->page_count);
+    print_list_with_pages_info(seg->page_table, seg->page_count);
+
+    aux = aux->next;
+  }
+
+  printf("----------------------------\n");
+}
+
+void print_list_with_pages_info(page_t *list, int list_size) {
+  for (int i = 0; i < list_size; i++) {
+    printf("   > page_%02d (%s)\n", i, list[i].used ? "used" : "not used");
+  }
+  printf("\n");
 }

@@ -72,15 +72,6 @@ void *cpu(void *arg) {
 
       if (kernel->scheduler.scheduled_process->pc >= kernel->scheduler.scheduled_process->code_length) {
         sys_call(PROCESS_FINISH, (void *)kernel->scheduler.scheduled_process);
-      } else {
-        if (is_process_log_active) {
-          printf("\nProcess (%s - %d): I will return! [QUANTUM_COMPLETED]",
-            kernel->scheduler.scheduled_process->name,
-            kernel->scheduler.scheduled_process->id
-          );
-        }
-
-        sys_call(PROCESS_INTERRUPT, (void *)(int)QUANTUM_COMPLETED);
       }
     }
   }

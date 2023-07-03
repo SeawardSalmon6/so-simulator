@@ -10,7 +10,7 @@
 #endif
 
 #include "../helpers/list.h"
-#include "../process/process.h"
+#include "../memory/memory.h"
 
 #define TERM_CREATE_PROCESS_LABEL "Create New Process"
 #define TERM_SHOW_TASKS_LABEL "Show Running Processes"
@@ -25,12 +25,11 @@ typedef enum {
   TERM_OPTIONS_LENGTH // If there is no = above, indicates the size of menu
 } terminal_options_t;
 
-extern int is_process_log_active;
-extern int is_memory_log_active;
-
 void show_menu(void);
 void print_tasks(void);
+void print_memory_usage(void);
 void print_list_with_processes_info(const char *, list_t *);
-void print_process_info(process_t *);
+void print_list_with_segments_info(list_t *);
+void print_list_with_pages_info(page_t *, int);
 
 #endif // OS_SIMULATOR_TERMINAL_H

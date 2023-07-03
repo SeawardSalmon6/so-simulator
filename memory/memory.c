@@ -75,7 +75,7 @@ segment_t *segment_create(memory_request_t *request) {
   segment->id = request->process->segment_id;
   segment->size = request->process->segment_size * KILOBYTE;
   segment->page_count = (int)ceil((double)request->process->code_length / INSTRUCTIONS_PER_PAGE);
-  segment->page_table = (page_t *)malloc(sizeof(page_t) * segment->page_count);
+  segment->page_table = (page_t *)malloc(segment->page_count * sizeof(page_t));
 
   if (!segment->page_table) {
     printf("\n--> Error: Not enough memory to allocate a segment page table!");

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../disk/disk.h"
 #include "../helpers/constants.h"
 #include "../semaphores/semaphores.h"
 #include "instruction.h"
@@ -35,15 +36,18 @@ void parse_instruction(instruction_t *instruction, char *line, int *remaining_ti
 
     if (strcmp(left_op, "exec") == 0) {
       instruction->op = EXEC;
-    } else if (strcmp(left_op, "read") == 0) {
-      instruction->op = READ;
-    } else if (strcmp(left_op, "write") == 0) {
-      instruction->op = WRITE;
+      (*remaining_time) += right_op;
     } else if (strcmp(left_op, "print") == 0) {
       instruction->op = PRINT;
+      (*remaining_time) += right_op;
+    } else if (strcmp(left_op, "read") == 0) {
+      instruction->op = READ;
+      (*remaining_time) += DISK_REQUEST_DURATION;
+    } else if (strcmp(left_op, "write") == 0) {
+      instruction->op = WRITE;
+      (*remaining_time) += DISK_REQUEST_DURATION;
     }
 
-    (*remaining_time) += right_op;
     instruction->value = right_op;
     instruction->semaphore = NULL;
   }

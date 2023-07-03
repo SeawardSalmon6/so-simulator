@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../disk/disk.h"
+#include "../io/print.h"
 #include "../memory/memory.h"
-#include "../scheduler/scheduler.h"
 #include "../process/instruction.h"
 #include "../process/process.h"
+#include "../scheduler/scheduler.h"
 #include "../semaphores/semaphores.h"
 #include "../terminal/terminal.h"
 #include "kernel.h"
@@ -28,6 +30,8 @@ void kernel_init(void) {
 }
 
 void sys_call(kernel_function_t func, void *arg) {
+  process_t *current_scheduled;
+
   switch (func) {
     case PROCESS_INTERRUPT: {
       schedule_process(&kernel->scheduler, (scheduler_flag_t)((__intptr_t)arg));
@@ -57,6 +61,27 @@ void sys_call(kernel_function_t func, void *arg) {
 
     case SEMAPHORE_V: {
       semaphore_V((semaphore_t *)arg, wakeup_proc);
+      break;
+    }
+
+    case PRINT_REQUEST: {
+      current_scheduled = kernel->scheduler.scheduled_process;
+      schedule_process(&kernel->scheduler, IO_REQUESTED);
+      print_request(current_scheduled, ((instruction_t *)arg)->value);
+      break;
+    }
+
+    case DISK_READ_REQUEST: {
+      current_scheduled = kernel->scheduler.scheduled_process;
+      schedule_process(&kernel->scheduler, IO_REQUESTED);
+      disk_read_request(current_scheduled, ((instruction_t *)arg)->value);
+      break;
+    }
+
+    case DISK_WRITE_REQUEST: {
+      current_scheduled = kernel->scheduler.scheduled_process;
+      schedule_process(&kernel->scheduler, IO_REQUESTED);
+      disk_write_request(current_scheduled, ((instruction_t *)arg)->value);
       break;
     }
 
@@ -91,6 +116,17 @@ void interrupt_control(kernel_function_t func, void *arg) {
       break;
     }
 
+    case DISK_FINISH:
+    {
+      schedule_unblock_process(&kernel->scheduler, (process_t *)arg, ((process_t *)arg)->priority ? HIGH_QUEUE : LOW_QUEUE);
+      break;
+    }
+
+    case PRINT_FINISH: {
+      schedule_unblock_process(&kernel->scheduler, (process_t *)arg, ((process_t *)arg)->priority ? HIGH_QUEUE : LOW_QUEUE);
+      break;
+    }
+
     default: {
       printf("\n--> Unrecognized kernel function!");
       break;
@@ -106,21 +142,17 @@ void run_instruction(process_t *proc, instruction_t *instr) {
     }
 
     case READ: {
-      proc->remaining -= instr->value;
+      sys_call(DISK_READ_REQUEST, (void *)(instruction_t *)instr);
       break;
     }
 
     case WRITE: {
-      proc->remaining -= instr->value;
+      sys_call(DISK_WRITE_REQUEST, (void *)(instruction_t *)instr);
       break;
     }
 
     case PRINT: {
-      if (is_process_log_active) {
-        printf("\nProcess (%s - %d): I'm printing! [%d]", proc->name, proc->id, instr->value);
-      }
-
-      proc->remaining -= instr->value;
+      sys_call(PRINT_REQUEST, (void *)(instruction_t *)instr);
       break;
     }
 
