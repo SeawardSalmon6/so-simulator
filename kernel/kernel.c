@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
 #include "../disk/disk.h"
 #include "../io/print.h"
@@ -11,6 +12,7 @@
 #include "../terminal/terminal.h"
 #include "kernel.h"
 
+sem_t mutex;
 kernel_t *kernel;
 
 void kernel_init(void) {
@@ -27,6 +29,8 @@ void kernel_init(void) {
   segment_table_init(&kernel->seg_table);
   scheduler_init(&kernel->scheduler);
   semaphore_table_init(&kernel->sem_table);
+
+  sem_init(&mutex, 0, 1);
 }
 
 void sys_call(kernel_function_t func, void *arg) {

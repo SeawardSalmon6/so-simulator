@@ -1,6 +1,8 @@
 #ifndef OS_SIMULATOR_KERNEL_H
 #define OS_SIMULATOR_KERNEL_H
 
+#include <semaphore.h>
+
 #include "../helpers/list.h"
 #include "../memory/memory.h"
 #include "../process/instruction.h"
@@ -34,6 +36,7 @@ typedef struct {
   int pc;
 } kernel_t;
 
+extern sem_t mutex;
 extern kernel_t *kernel;
 
 void kernel_init(void);

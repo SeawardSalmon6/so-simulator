@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
-#include "list.h"
+#include "../kernel/kernel.h"
 #include "../process/process.h"
+#include "list.h"
 
 list_node_t *list_node_create(void *content) {
   list_node_t *node = (list_node_t *)malloc(sizeof(list_node_t));
@@ -20,6 +22,8 @@ list_node_t *list_node_create(void *content) {
 }
 
 list_node_t *list_remove_head(list_t *list) {
+  sem_wait(&mutex);
+
   list_node_t *node = list->head;
 
   if (list->head) {
@@ -37,10 +41,14 @@ list_node_t *list_remove_head(list_t *list) {
     list->size--;
   }
 
+  sem_post(&mutex);
+
   return node;
 }
 
 void list_remove_node(list_t *list, list_node_t *node) {
+  sem_wait(&mutex);
+
   if (node) {
     if (node->prev) {
       node->prev->next = node->next;
@@ -56,6 +64,8 @@ void list_remove_node(list_t *list, list_node_t *node) {
 
     list->size--;
   }
+
+  sem_post(&mutex);
 }
 
 list_node_t *list_remove_tail(list_t *list) {
@@ -94,6 +104,8 @@ list_t *list_init(void) {
 }
 
 void list_add(list_t *list, void *content, int sort_process) {
+  sem_wait(&mutex);
+
   process_t *aux_proc, *proc;
   list_node_t *aux, *node = list_node_create(content);
 
@@ -148,6 +160,8 @@ void list_add(list_t *list, void *content, int sort_process) {
   }
 
   list->size++;
+
+  sem_post(&mutex);
 }
 
 int is_list_empty(list_t *list) {
